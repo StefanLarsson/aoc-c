@@ -62,19 +62,53 @@ int isRepeated2(unsigned char* s) {
   return 1;
 }
 
-int isRepeated(uint64_t x) {
-  sprintf(tjoff, "%lld", x);
-  return isRepeated2(tjoff);
-}
-
 int isRepeatedAny(unsigned char* s) {
+  int repFound = 0;
   int l = strlen(s);
   if ( l <= 1)
     return 0;
+  int nReps = 2;
+  while (nReps <= l) {
+    if(l % nReps == 0) {
+      int runLength = l/ nReps ;
+      int i;
+      int broken = 0;
+      for (i = 0;i < runLength; i++) {
+        int j;
+        for(j = 0; j < nReps; j++) {
+          if (s[i] != s[j * runLength + i]){
+            broken = 1;
+            break;
+          }
+        }
+        if(broken)
+          break;
+      }
+      if(!broken) {
+        printf("[%s] has %d repetitions of run length %d\n", s, nReps, runLength);
 
+        return 1;
+      }
+    }
+    nReps++;
+  }
+
+  return 0;
 }
 
-    
+int isRepeated(uint64_t x) {
+  sprintf(tjoff, "%lld", x);
+  return isRepeatedAny(tjoff);
+}
+
+/* What is a repeated number? 
+ * If 1 digit repeating: xxxxx = x * 1 + x * 10 + ...  = x * 11111
+ * If 2 digit repeating:
+ * xyxyxy = xy + xy * 100 + xy * 10000 = xy * (1 + 100 + 10000) = xy * 10101
+ * If 3 digits repeating:
+ * xyzxyzxyz = xyz * 1 + xyz * 1000 + xyx * 1000000 = xyz * (1001001)
+ */
+
 uint64_t processRange(range *r) {
   uint64_t sumRepeated = 0;
   printf("Range: lower = %ld upper = %ld\n", r->lower, r->upper);
