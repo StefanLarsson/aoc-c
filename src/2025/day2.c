@@ -51,19 +51,28 @@ int getRange(FILE *f, range *r) {
 
 static unsigned char tjoff[100];
 
-int isRepeated(uint64_t x) {
-  sprintf(tjoff, "%lld", x);
-  int l = strlen(tjoff);
+int isRepeated2(unsigned char* s) {
+  int l = strlen(s);
   if ( l % 2)
     return 0;
-  for (int i = 0; 2 * i < l; i++) {
-    if(tjoff[i] != tjoff[i + (l / 2)])
+  for(int i = 0; 2 * i < l; i++) {
+    if(s[i] != s[i+ (l / 2)])
       return 0;
   }
   return 1;
 }
 
+int isRepeated(uint64_t x) {
+  sprintf(tjoff, "%lld", x);
+  return isRepeated2(tjoff);
+}
+
 int isRepeatedAny(unsigned char* s) {
+  int l = strlen(s);
+  if ( l <= 1)
+    return 0;
+
+}
 
     
 uint64_t processRange(range *r) {
