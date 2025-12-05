@@ -85,7 +85,7 @@ int isRepeatedAny(unsigned char* s) {
           break;
       }
       if(!broken) {
-        printf("[%s] has %d repetitions of run length %d\n", s, nReps, runLength);
+        // printf("[%s] has %d repetitions of run length %d\n", s, nReps, runLength);
 
         return 1;
       }
@@ -111,15 +111,15 @@ int isRepeated(uint64_t x) {
 
 uint64_t processRange(range *r) {
   uint64_t sumRepeated = 0;
-  printf("Range: lower = %ld upper = %ld\n", r->lower, r->upper);
+//  printf("Range: lower = %ld upper = %ld\n", r->lower, r->upper);
   for(uint64_t i = r-> lower; i <= r->upper; i++) {
     if(isRepeated(i)) {
-      printf("Invalid: %lld\n", i);
+//      printf("Invalid: %lld\n", i);
 
       sumRepeated+=i;
     } 
   }
-  printf("Sum of repeitions in range is  %lld repetitions in range\n", sumRepeated);
+//  printf("Sum of repeitions in range is  %lld repetitions in range\n", sumRepeated);
   return sumRepeated;
 }
 
