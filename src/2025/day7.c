@@ -5,11 +5,30 @@ int calculateSplits(FILE *f) {
   size_t n, nold, ntemp;
   char *s = NULL, *sold = NULL, *stemp;
   int nsplits = 0;
-  int l;
+  int l, lold;
+  long long *counts = NULL, *countsold = NULL, *countstemp;
   while((l = getline(&s, &n, f)) > 0) {
-    // printf("Read line %s",s);
+    counts = realloc(counts, l * sizeof(long));
+    for (int i = 0; i < l; counts[i++] = 0);
+
+    
+    // printf("Line: %s",s);
     if (sold) {
       // printf("Old line %s", sold);
+      for ( int i = 0; i < l; i++) {
+        switch(s[i]) {
+        case '.':
+          counts[i] += countsold[i];
+          break;
+        case '^':
+          counts[i-1] += countsold[i];
+          counts[i+1] += countsold[i];
+          break;
+        default:
+          break;
+        }
+        
+      }  
       for ( int i = 0; i < l; i++) {
         switch(s[i]) {
         case '.':
@@ -25,9 +44,28 @@ int calculateSplits(FILE *f) {
         default:
           break;
         }
+        
       }  
-      printf("Changed line: %s",s);
+      //printf("Changed line: %s",s);
+    } else {
+      for ( int i = 0; i < l; i++) {
+        counts[i] = (s[i] == 'S') ? 1 : 0;
+      } 
     }
+/*
+    printf("      ");
+    for (int i =0; i < l; i++){
+      if(counts[i])
+        printf("%lld", counts[i]);
+      else
+        printf("%c", s[i]);
+    }
+    printf("      ");
+    for (int i = 0; countsold && i < l; i++) {
+      printf("%lld", countsold[i]);
+    } 
+    puts("");
+*/
     stemp = sold;
     sold = s;
     s = stemp;
@@ -35,7 +73,17 @@ int calculateSplits(FILE *f) {
     ntemp = nold;
     nold = n;
     n = ntemp;
+    countstemp = countsold;
+    countsold = counts;
+    counts = countstemp;
+    lold = l;
   }
+  long long sum = 0;
+  for (int i = 0; i < lold; i++) {
+   // printf("%lld\n", countsold[i]);
+   sum += countsold[i];
+  }
+  printf("Paths %lld\n", sum);
   return nsplits;
 } 
   
