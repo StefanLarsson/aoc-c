@@ -118,7 +118,7 @@ void buildEdges(box *b, int nb, edge *edges){
   }
 }
 
-void buildHeap(heap *h, edge *edges, int n) {
+void buildEdgeHeap(heap *h, edge *edges, int n) {
   h->storage = malloc(sizeof(void*) * n);
   h->storageSize = n;
   h->usedStorage = 0;
@@ -129,26 +129,44 @@ void buildHeap(heap *h, edge *edges, int n) {
   }
 }
 
+int boxCmp(void *p, void *q) {
+  box *pp =  p, *qq =  q;
+  return qq->size - pp->size;
+}
+void buildBoxHeap(heap *h, box *boxes, int n) {
+  h->storage = malloc(sizeof(void*) * n);
+  h->storageSize = n;
+  h->usedStorage = 0;
+  h->cmp = boxCmp;
+  h->notify = NULL;
+  for (int i = 0; i < n; i++) {
+   insert(h, boxes + i);
+  }
+}
+
+
 void doDistances(box *b, int nb){
   int ncomb = nb * (nb - 1) / 2;
   edge * edges = malloc( sizeof(edge) * ncomb);
   buildEdges(b, nb, edges);
 
   heap h;
-  buildHeap(&h, edges, ncomb);
+  buildEdgeHeap(&h, edges, ncomb);
   edge * p = peekTop(&h);
-  printf("Shortest: %ld\n", p->dist ) ;
   // hack to handle example vs actual problem
   int nShortest = (nb < 100) ? 10 : 1000;
   for (int i = 0; i < nShortest; i++){
     edge *e = deleteTop(&h); 
     join(e->p1, e->p2);
   }
-  for (int i = 0; i < nb; i++) {
-    if(b[i].parent == NULL) {
-      printf("Found a circuit with %d junction boxes.\n", b[i].size);
-    }
+  heap hh;
+  buildBoxHeap(&hh, b, nb);
+  int prod = 1;
+  for (int i = 0;i < 3; i++) {
+    box * p = deleteTop(&hh);
+    prod *= p->size;
   }
+  printf("The product of the sizes of the three largest circuits is %d.\n", prod);
 }
 
 void processFile(FILE *f) {
