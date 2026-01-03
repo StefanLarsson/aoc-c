@@ -26,7 +26,6 @@ int intCmp(void *p, void *q) {
 }
 
 int main(int argc, char **argv) {
-  printf("Hello, world!\n");
   heap h;
   h.storage = malloc(sizeof(void*) * BUFSIZ);
   h.storageSize = BUFSIZ;

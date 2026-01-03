@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "../util/utils.h"
 
 typedef struct box {
   int x[3];
@@ -46,10 +47,49 @@ long bdsq(box *b1, box *b2) {
   return  dsq(x1, x2, 3);
 }  
 
+int longCmp(void *p, void *q) {
+  long *pp = (long *)p;
+  long *qq = (long *)q;
+  long d = *pp - *qq;
+  if (d < 0) return -1;
+  else if ( d > 0) return 1;
+  else return 0;
+}
+
+  
+typedef struct {
+  box *p1;
+  box *p2;
+  long dist;
+} edge;
+
+int edgeCmp(void *p, void *q) {
+  edge *pp = (edge *) p;
+  edge *qq = (edge *) q;
+  long d = pp->dist - qq->dist;
+  if ( d < 0) return -1;
+  else if ( d > 0) return 1;
+  else return 0;
+}
+
 void doDistances(box *b, int nb){
+  heap h;
+  int ncomb = nb * (nb - 1) / 2;
+  h.storage = malloc(sizeof(void*) *ncomb);
+  h.storageSize = ncomb;
+  h.usedStorage = 0;
+  h.cmp = edgeCmp;
+  h.notify = NULL;
+  edge * edges = malloc( sizeof(edge) * ncomb);
+  int di = 0;
   for(int i = 0; i < nb; i++) {
     for (int j = i + 1; j < nb; j++) {
-      printf(
+      long d = bdsq(b + i, b + j);
+      edges[di].p1  = b + i;
+      edges[di].p2  = b + j;
+      edges[di].dist  = d;
+      di++;
+      /*printf(
         "box1: %d %d %d box2: %d %d %d d2: %ld\n",
         b[i].x[0],
         b[i].x[1],
@@ -57,9 +97,15 @@ void doDistances(box *b, int nb){
         b[j].x[0],
         b[j].x[1],
         b[j].x[2],
-        bdsq(b + i, b + j));
+        d);
+      */
     }
   }
+  for (int i = 0; i < ncomb; i++) {
+   insert(&h, edges + i);
+  }
+  long * p = peekTop(&h);
+  printf("Shortest: %ld\n", ((edge*)p)->dist ) ;
 }
 
 void processFile(FILE *f) {
