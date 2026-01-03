@@ -4,8 +4,26 @@
 
 typedef struct box {
   int x[3];
+  struct box *parent; // Disjoint set plan!
+  int size;           // As above!
 } box;
 
+box* join(box* p1, box *p2) {
+  while( p1->parent)
+    p1 = p1->parent;
+  while( p2->parent)
+    p2 = p2->parent;
+  if (p1 == p2) return p1;
+  if(p1->size >= p2->size) {
+      p1->size += p2->size;
+      p2->parent = p1;
+      return p1;
+  } else {
+      p2->size += p1->size;
+      p1->parent = p2;
+      return p2;
+  }
+}
 #define ALLOCSTEP 12
 
 struct box *readBoxes(FILE *f, int *n) {
@@ -14,7 +32,7 @@ struct box *readBoxes(FILE *f, int *n) {
   size_t ns;
   int _n = 0;
   int space = 0;
-  box *result = NULL;
+  struct box *result = NULL;
   while((l =getline(&s, &ns,f)) > 0) {
     if (_n >= space) {
       space += ALLOCSTEP;
@@ -22,6 +40,8 @@ struct box *readBoxes(FILE *f, int *n) {
     }
     //printf("Line: %s",s);
     int j = sscanf(s, "%d,%d,%d",&(result[_n].x[0]), &(result[_n].x[1]), &(result[_n].x[2]));
+    result[_n].parent = NULL;
+    result[_n].size = 1;
     // printf("Box: %d %d %d\n", result[_n].x[0], result[_n].x[1], result[_n].x[2]);
     _n++;
   }
@@ -72,15 +92,10 @@ int edgeCmp(void *p, void *q) {
   else return 0;
 }
 
-void doDistances(box *b, int nb){
-  heap h;
-  int ncomb = nb * (nb - 1) / 2;
-  h.storage = malloc(sizeof(void*) *ncomb);
-  h.storageSize = ncomb;
-  h.usedStorage = 0;
-  h.cmp = edgeCmp;
-  h.notify = NULL;
-  edge * edges = malloc( sizeof(edge) * ncomb);
+/*
+ * Edges must be available and sufficient size
+ */
+void buildEdges(box *b, int nb, edge *edges){
   int di = 0;
   for(int i = 0; i < nb; i++) {
     for (int j = i + 1; j < nb; j++) {
@@ -101,11 +116,39 @@ void doDistances(box *b, int nb){
       */
     }
   }
-  for (int i = 0; i < ncomb; i++) {
-   insert(&h, edges + i);
+}
+
+void buildHeap(heap *h, edge *edges, int n) {
+  h->storage = malloc(sizeof(void*) * n);
+  h->storageSize = n;
+  h->usedStorage = 0;
+  h->cmp = edgeCmp;
+  h->notify = NULL;
+  for (int i = 0; i < n; i++) {
+   insert(h, edges + i);
   }
-  long * p = peekTop(&h);
-  printf("Shortest: %ld\n", ((edge*)p)->dist ) ;
+}
+
+void doDistances(box *b, int nb){
+  int ncomb = nb * (nb - 1) / 2;
+  edge * edges = malloc( sizeof(edge) * ncomb);
+  buildEdges(b, nb, edges);
+
+  heap h;
+  buildHeap(&h, edges, ncomb);
+  edge * p = peekTop(&h);
+  printf("Shortest: %ld\n", p->dist ) ;
+  // hack to handle example vs actual problem
+  int nShortest = (nb < 100) ? 10 : 1000;
+  for (int i = 0; i < nShortest; i++){
+    edge *e = deleteTop(&h); 
+    join(e->p1, e->p2);
+  }
+  for (int i = 0; i < nb; i++) {
+    if(b[i].parent == NULL) {
+      printf("Found a circuit with %d junction boxes.\n", b[i].size);
+    }
+  }
 }
 
 void processFile(FILE *f) {
