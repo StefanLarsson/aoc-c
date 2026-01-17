@@ -155,8 +155,9 @@ void doDistances(box *b, int nb){
   edge * p = peekTop(&h);
   // hack to handle example vs actual problem
   int nShortest = (nb < 100) ? 10 : 1000;
+  edge *e;
   for (int i = 0; i < nShortest; i++){
-    edge *e = deleteTop(&h); 
+    e = deleteTop(&h); 
     join(e->p1, e->p2);
   }
   heap hh;
@@ -167,6 +168,24 @@ void doDistances(box *b, int nb){
     prod *= p->size;
   }
   printf("The product of the sizes of the three largest circuits is %d.\n", prod);
+  // Continue until everything joined! 
+  // The graph is complete, we know that we will not run out of edges
+  box * bb;
+  do {
+
+    e = deleteTop(&h);
+    bb = join(e->p1, e->p2);
+  } while(bb->size < nb);
+  printf("Stopped after edge : (%d, %d, %d) - (%d, %d, %d)\n",
+    e->p1->x[0],
+    e->p1->x[1],
+    e->p1->x[2],
+    e->p2->x[0],
+    e->p2->x[1],
+    e->p2->x[2]);
+  printf(
+    "The product of the x coordinates of the last two connected junction boxes is %ld.\n",
+    (long) (e->p1->x[0]) * e->p2->x[0]);
 }
 
 void processFile(FILE *f) {
